@@ -12,18 +12,6 @@ By the end of Day 3, students should understand:
 - How code moves from Git checkout to Docker image build, tag, and push to AWS ECR
 - How to create a multibranch pipeline project using a `Jenkinsfile`
 
-## Class Timing: 7:00 AM to 8:30 AM
-
-| Time | Topic |
-| --- | --- |
-| 7:00 - 7:10 | Day 2 recap |
-| 7:10 - 7:25 | Jenkins plugins explanation |
-| 7:25 - 7:40 | Install/check required plugins |
-| 7:40 - 8:00 | Explain real-time pipeline stages |
-| 8:00 - 8:20 | Multibranch pipeline practical |
-| 8:20 - 8:25 | ECR push explanation |
-| 8:25 - 8:30 | Recap and homework |
-
 ## 1. Day 2 Recap
 
 Ask students:
