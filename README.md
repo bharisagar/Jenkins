@@ -2,12 +2,6 @@
 
 Beginner-friendly Jenkins notes and practical labs for DevOps students.
 
-## Audience
-
-- Students learning DevOps from scratch
-- Students already familiar with Linux, Git, and Docker basics
-- Daily class timing: 7:00 AM to 8:30 AM
-
 ## Folder Structure
 
 | Folder | Content |
