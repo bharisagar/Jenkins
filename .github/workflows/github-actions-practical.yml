@@ -1,0 +1,52 @@
+name: GitHub Actions Practical
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      student_name:
+        description: "Student name for manual run practice"
+        required: false
+        default: "DevOps Student"
+
+permissions:
+  contents: read
+
+jobs:
+  basic-ci:
+    name: Basic CI Demo
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Show trigger information
+        run: |
+          echo "Workflow name: $GITHUB_WORKFLOW"
+          echo "Triggered by event: $GITHUB_EVENT_NAME"
+          echo "Branch or ref: $GITHUB_REF"
+          echo "Commit SHA: $GITHUB_SHA"
+          echo "Actor: $GITHUB_ACTOR"
+          echo "Manual input student_name: ${{ inputs.student_name }}"
+
+      - name: Verify repository files
+        run: |
+          test -f README.md
+          test -f day4/README.md
+          echo "Training notes are present."
+
+      - name: Compile Day 3 Python sample
+        run: |
+          python --version
+          python -m py_compile day3/projects/multibranch-ecr-demo/app.py
+
+      - name: Explain next production step
+        run: |
+          echo "In production, the next steps can be Docker build, AWS login, ECR login, and image push."
+          echo "Those cloud steps need AWS IAM permissions and should use GitHub OIDC or GitHub Secrets."
