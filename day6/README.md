@@ -494,3 +494,339 @@ It is a protection rule that pauses deployment until an approved user allows it 
 ### Q5. What is rollback?
 
 Rollback means deploying a previous known-good version when the current version has a problem.
+
+## 20. Real GitHub Actions to ECR Demo Added in This Repository
+
+This repository now has a real GitHub Actions workflow that pushes a Docker image to Amazon ECR.
+
+Workflow file:
+
+```text
+.github/workflows/github-actions-practical.yml
+```
+
+Day 6 Dockerfile:
+
+```text
+day6/Dockerfile
+```
+
+The workflow runs on:
+
+```text
+push to main
+manual workflow_dispatch
+pull_request to main for CI only
+```
+
+Important:
+
+```text
+The ECR push job does not run on pull_request.
+It runs only on push to main or manual workflow_dispatch.
+```
+
+This prevents feature branch pull requests from pushing images to production-style registries.
+
+## 21. Real AWS/ECR Values Used for Demo
+
+AWS account:
+
+```text
+909969506392
+```
+
+AWS region:
+
+```text
+ap-south-1
+```
+
+ECR repository:
+
+```text
+github-actions-day6-demo
+```
+
+ECR image URI format:
+
+```text
+909969506392.dkr.ecr.ap-south-1.amazonaws.com/github-actions-day6-demo:<commit-sha>
+```
+
+GitHub Actions IAM role:
+
+```text
+arn:aws:iam::909969506392:role/GitHubActionsDay6EcrPushRole
+```
+
+## 22. What Was Created in AWS
+
+For GitHub Actions to push to ECR, AWS must trust GitHub.
+
+Created AWS OIDC provider:
+
+```text
+arn:aws:iam::909969506392:oidc-provider/token.actions.githubusercontent.com
+```
+
+Created IAM role:
+
+```text
+GitHubActionsDay6EcrPushRole
+```
+
+The role trust policy allows only this repository and branch:
+
+```text
+repo:bharisagar/Jenkins-Githubactions:ref:refs/heads/main
+```
+
+This means GitHub Actions from another repository or another branch cannot use this role.
+
+## 23. Why We Use OIDC Instead of AWS Keys
+
+Old method:
+
+```text
+Create AWS access key
+Store AWS_ACCESS_KEY_ID in GitHub Secrets
+Store AWS_SECRET_ACCESS_KEY in GitHub Secrets
+Workflow uses long-term key
+```
+
+Production method:
+
+```text
+GitHub requests temporary OIDC token
+AWS verifies repository and branch
+AWS gives temporary credentials
+Credentials expire automatically
+No permanent AWS key is stored in GitHub
+```
+
+This is safer for production because there is no long-term AWS secret sitting inside GitHub.
+
+## 24. Workflow Jobs Explained
+
+The workflow has two jobs.
+
+### Job 1: Basic CI Demo
+
+```text
+basic-ci
+```
+
+It does:
+
+```text
+Checkout repository
+Print event, branch, SHA, actor
+Verify README and Dockerfile
+Compile Python sample
+Explain next production step
+```
+
+This job runs for:
+
+```text
+push
+pull_request
+workflow_dispatch
+```
+
+### Job 2: Build, Tag, and Push Image to ECR
+
+```text
+ecr-build-and-push
+```
+
+It does:
+
+```text
+Checkout repository
+Configure AWS credentials using OIDC
+Login to Amazon ECR
+Build Docker image from day6/Dockerfile
+Tag image with GitHub commit SHA
+Tag image as latest
+Push both tags to ECR
+Show ECR image details
+```
+
+This job is skipped for pull requests:
+
+```yaml
+if: github.event_name != 'pull_request'
+```
+
+## 25. Dockerfile Used by GitHub Actions
+
+File:
+
+```text
+day6/Dockerfile
+```
+
+Content summary:
+
+```text
+Use python:3.12-slim
+Set /app as workdir
+Copy requirements.txt from Day 3 sample app
+Install Flask dependency
+Copy app.py from Day 3 sample app
+Expose port 5000
+Run python app.py
+```
+
+The workflow builds using repository root as context:
+
+```bash
+docker build -f day6/Dockerfile -t <ecr-image-uri>:<commit-sha> .
+```
+
+We use root context because the Dockerfile copies files from:
+
+```text
+day3/projects/multibranch-ecr-demo/
+```
+
+## 26. Build, Tag, and Push Commands in GitHub Actions
+
+Inside the workflow, GitHub Actions runs:
+
+```bash
+docker build -f day6/Dockerfile -t $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG .
+docker tag $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG $REGISTRY/$ECR_REPOSITORY:latest
+docker push $REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
+docker push $REGISTRY/$ECR_REPOSITORY:latest
+```
+
+`IMAGE_TAG` comes from:
+
+```yaml
+IMAGE_TAG: ${{ github.sha }}
+```
+
+Why this is important:
+
+```text
+Every image tag points to the exact Git commit that built it.
+This helps debugging, rollback, and audit.
+```
+
+## 27. How to Show Live Demo to Students
+
+Step 1: Open workflow file.
+
+```text
+.github/workflows/github-actions-practical.yml
+```
+
+Step 2: Explain triggers.
+
+```text
+push to main -> CI plus ECR push
+pull_request to main -> CI only
+workflow_dispatch -> manual CI plus ECR push
+```
+
+Step 3: Push a small commit or run manually.
+
+Manual path:
+
+```text
+GitHub repository
+  -> Actions
+  -> GitHub Actions Practical
+  -> Run workflow
+```
+
+Push path:
+
+```bash
+git commit --allow-empty -m "demo github actions ecr push"
+git push origin main
+```
+
+Step 4: Open Actions run and explain jobs.
+
+```text
+basic-ci
+  -> proves code is checked and valid
+
+ecr-build-and-push
+  -> proves image is built and pushed to ECR
+```
+
+Step 5: Open ECR in AWS Console.
+
+```text
+AWS Console
+  -> ECR
+  -> Private repositories
+  -> github-actions-day6-demo
+  -> Images
+```
+
+Students should see:
+
+```text
+latest
+<commit-sha>
+```
+
+## 28. What Students Should Understand from This Demo
+
+This is the real production idea:
+
+```text
+GitHub commit becomes Docker image.
+Docker image is stored in ECR.
+Deployment tools can now deploy that image to ECS, EKS, EC2, or Kubernetes.
+```
+
+The key DevOps learning is not only Docker push. The key learning is traceability:
+
+```text
+Git commit SHA = Docker image tag = deployable artifact version
+```
+
+## 29. Important Production Notes
+
+For classroom, pushing `latest` is useful to understand tags.
+
+For production, do not rely only on `latest`.
+
+Better production approach:
+
+```text
+Always push commit SHA tag.
+Optionally push latest for convenience.
+Deploy using commit SHA or release version.
+```
+
+Also use:
+
+```text
+Branch protection
+Pull request checks
+Environment approvals
+Separate staging and production roles
+Least-privilege IAM permissions
+Rollback workflow
+```
+
+## 30. Final Day 6 Demo Summary
+
+Use this explanation in class:
+
+```text
+Earlier we manually pushed a Docker image to ECR from our laptop.
+Now GitHub Actions does the same from GitHub.
+
+The workflow checks the code, logs in to AWS using OIDC, logs in to ECR, builds the Docker image, tags it with the commit SHA, pushes it to ECR, and prints image details.
+
+This is how modern production CI/CD starts: code change creates a traceable container image.
+```

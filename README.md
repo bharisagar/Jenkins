@@ -31,7 +31,7 @@ Students should understand:
 | [day5](day5/README.md) | Jenkins vs GitHub Actions: when to use each tool based on real project and production needs |
 | [day6](day6/README.md) | End-to-end GitHub Actions production-style CI/CD mini project with AWS ECR design |
 | [day7](day7/README.md) | Revision, troubleshooting, interview preparation, and final CI/CD checklist |
-| [.github/workflows/github-actions-practical.yml](.github/workflows/github-actions-practical.yml) | Safe GitHub Actions demo workflow that runs on push, pull request, and manual trigger |
+| [.github/workflows/github-actions-practical.yml](.github/workflows/github-actions-practical.yml) | GitHub Actions demo workflow that runs CI and pushes a Docker image to AWS ECR on push/manual trigger |
 
 ## 7-Day CI/CD Roadmap
 
@@ -57,7 +57,7 @@ Students should understand:
 
 ## Current GitHub Actions Practical
 
-This repository includes a safe classroom workflow:
+This repository includes a classroom GitHub Actions workflow:
 
 ```text
 .github/workflows/github-actions-practical.yml
@@ -71,9 +71,9 @@ It demonstrates:
 - GitHub runner environment information
 - Repository checkout using `actions/checkout`
 - Basic Python validation of the Day 3 sample app
-- Explanation of the next production steps for AWS ECR deployment
+- Real Docker build, image tag, AWS OIDC login, ECR login, and ECR push on push/manual trigger
 
-After this repository is pushed to GitHub, students can open the repository Actions tab and observe the workflow run automatically.
+After this repository is pushed to GitHub, students can open the repository Actions tab and observe the workflow run automatically, then verify the pushed image in Amazon ECR.
 
 ## Jenkins or GitHub Actions?
 
